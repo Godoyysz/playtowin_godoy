@@ -2,7 +2,7 @@
 require("dotenv").config();
 const express = require("express");
 const conn = require("./db/conn");
-//const Jogo = require("./models/Jogo");
+const Jogo = require("./models/Jogo");
 const handlebars = require("express-handlebars");
 const { json } = require("express/lib/response");
 const Usuario = require("./models/Usuario");
@@ -42,7 +42,23 @@ app.post("/usuario/novo", async (req, res) => {
 app.get("/usuarios/:id/atualizar", async (req, res) => {
     const id = req.params.id
     const usuario = await Usuario.findByPk(id, {raw: true})
+
     res.render("formUsuario", {usuario});
+});
+
+app.post("/usuarios/:id/atualizar", async (req, res) => {
+  const id = req.params.id
+  const dadosUsuario ={
+  nickname= req.body.nickname,
+  nome: req.body.nome,
+  }
+  const registrosAfetados = Usuario.update(dadosUsuario, {where: {id:id}});
+
+  if(registrosAfetados > 0){
+    res.direct("/usuarios");
+  }else {
+    res.send("Erro ao atualizar usuário!")
+  }
 });
 
 app.get("/jogo/novo", (req, res) => {
@@ -62,6 +78,17 @@ app.get("/usuarios", async (req, res) => {
     const usuarios = await Usuario.findAll({raw: true})
   res.render(`usuarios`, {usuarios});
 });
+
+app.post("/usuarios/excluir", async (req, res) => {
+  const id = req.body.id;
+
+  const registrosAfetados = await Usuario.destroy({where: {id:id}});
+  if(registrosAfetados > 0){
+    res.redirect("/usuarios");
+  }else {
+    res.rend("Erro ao excluir usuario")
+  }
+})
 
 // Inicialização do servidor
 app.listen(8000, () => {
